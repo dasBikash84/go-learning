@@ -9,7 +9,34 @@ import (
 	"time"
 )
 
-type deck []string
+type Card struct {
+	suit  string
+	value string
+}
+
+func (c Card) String() string {
+	return fmt.Sprintf("%v of %v", c.value, c.suit)
+}
+
+type deck []Card
+
+func (d deck) toStringArray() []string {
+	res := []string{}
+	for _, card := range d {
+		res = append(res, card.String())
+	}
+	return res
+}
+
+func deserializeStrToDeck(strs []string) deck {
+	var d deck
+	for _, str := range strs {
+		data := strings.Split(str, " of ")
+		suit, value := data[1], data[0]
+		d = append(d, Card{suit: suit, value: value})
+	}
+	return d
+}
 
 func (d deck) print() {
 	for i, card := range d {
@@ -28,15 +55,15 @@ func (d deck) copyDeck() deck {
 
 func newDeck() deck {
 
-	cardSuits := deck{"S", "H", "D", "C"}
+	cardSuits := []string{"S", "H", "D", "C"}
 
-	cardValues := deck{"2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"}
+	cardValues := []string{"2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"}
 
-	outDeck := deck{}
+	var outDeck deck
 
-	for _, cardScardSuit := range cardSuits {
+	for _, cardSuit := range cardSuits {
 		for _, cardValue := range cardValues {
-			outDeck = append(outDeck, cardValue+" of "+cardScardSuit)
+			outDeck = append(outDeck, Card{value: cardValue, suit: cardSuit})
 		}
 	}
 
@@ -50,7 +77,7 @@ func (d deck) deal(handSize int) (deck, deck) {
 var srtSeparator = "@$%&"
 
 func (d deck) toByteSlice() []byte {
-	return []byte(strings.Join([]string(d), srtSeparator))
+	return []byte(strings.Join(d.toStringArray(), srtSeparator))
 }
 
 func (d deck) saveToFile(fileName string) error {
@@ -64,7 +91,7 @@ func newDeckFromFile(fileName string) deck {
 		fmt.Println("Error: ", err)
 		os.Exit(1)
 	}
-	return deck(strings.Split(string(data), srtSeparator))
+	return deserializeStrToDeck(strings.Split(string(data), srtSeparator))
 }
 
 func (d deck) shuffle() deck {
